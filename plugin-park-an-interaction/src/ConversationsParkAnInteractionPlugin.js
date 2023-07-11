@@ -1,16 +1,16 @@
-import React from 'react'
-import { FlexPlugin } from '@twilio/flex-plugin'
-import { CustomizationProvider } from '@twilio-paste/core/customization'
+import React from "react";
+import { FlexPlugin } from "@twilio/flex-plugin";
+import { CustomizationProvider } from "@twilio-paste/core/customization";
 
-import { ParkButton } from './components'
-import './notifications'
-import './actions'
+import { ParkButton } from "./components";
+import "./notifications";
+import "./actions";
 
-const PLUGIN_NAME = 'ConversationsParkAnInteractionPlugin'
+const PLUGIN_NAME = "ConversationsParkAnInteractionPlugin";
 
 export default class ConversationsParkAnInteractionPlugin extends FlexPlugin {
   constructor() {
-    super(PLUGIN_NAME)
+    super(PLUGIN_NAME);
   }
 
   /**
@@ -22,17 +22,24 @@ export default class ConversationsParkAnInteractionPlugin extends FlexPlugin {
    */
   async init(flex, manager) {
     flex.setProviders({
-      PasteThemeProvider: CustomizationProvider
-    })
+      PasteThemeProvider: CustomizationProvider,
+    });
+
+    // Conditional assignment for assigned Chat tasks.
+    const isAssignedChatTask = (props) =>
+      props.channelDefinition.capabilities.has("Chat") &&
+      props.task.taskStatus === "assigned";
+
+    flex.TaskCanvasHeader.Content.remove("actions", {
+      if: isAssignedChatTask,
+    });
 
     flex.TaskCanvasHeader.Content.add(
-      <ParkButton key='conversation-park-button' />,
+      <ParkButton key="conversation-park-button" />,
       {
         sortOrder: 1,
-        if: props =>
-          props.channelDefinition.capabilities.has('Chat') &&
-          props.task.taskStatus === 'assigned'
+        if: isAssignedChatTask,
       }
-    )
+    );
   }
 }
