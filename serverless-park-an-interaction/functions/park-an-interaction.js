@@ -18,6 +18,42 @@ exports.handler = async function (context, event, callback) {
   const taskAttributes = event.taskAttributes;
 
   try {
+    try {
+      const participants = await client.conversations.v1
+        .conversations(conversationSid)
+        .participants.list();
+      const binding = participants.find(
+        (participant) => participant?.messagingBinding
+      )?.messagingBinding;
+
+      if (binding) {
+        const { proxy_address, address } = binding;
+
+        // Create the message.
+        const message = await client.messages.create({
+          to: address,
+          from: proxy_address,
+          body: "Gracias por comunicarte a la Uk, la conversación ha quedado cerrada. Recuerda que al referir a un amigo a estudiar una Licenciatura con nosotros puedes llevarte un 70% de descuento en tu próxima colegiatura.",
+        });
+
+        // Attach the message to the conversation's attributes to not re-send it.
+        const conversation = await client.conversations
+          .conversations(conversationSid)
+          .fetch();
+
+        const attributes = JSON.parse(conversation.attributes);
+
+        attributes["alertMessage"] = true;
+
+        // Set the new attributes on the conversation.
+        await client.conversations
+          .conversations(conversationSid)
+          .update({ attributes: `${JSON.stringify(attributes)}` });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
     // Remove the agent
     await client.flexApi.v1
       .interaction(interactionSid)
@@ -56,7 +92,7 @@ exports.handler = async function (context, event, callback) {
     };
 
     // Set the parked flag.
-    if (taskAttributes?.ignoreParkingLogic) attributes['hasBeenParked'] = true;
+    if (taskAttributes?.ignoreParkingLogic) attributes["hasBeenParked"] = true;
 
     await client.conversations
       .conversations(conversationSid)

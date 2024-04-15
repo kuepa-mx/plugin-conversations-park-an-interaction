@@ -85,6 +85,23 @@ exports.handler = async function (context, event, callback) {
         },
       });
 
+    // Obtain the conversation's attributes to remove the alertMessage flag
+    const conversationResource = await client.conversations
+      .conversations(conversationSid)
+      .fetch();
+
+    const conversationAttributes = JSON.parse(conversationResource.attributes);
+
+    // Unset the flag, if set.
+    if (conversationAttributes["alertMessage"]) {
+      delete conversationAttributes["alertMessage"];
+
+      // Update the conversation's attributes
+      await client.conversations
+        .conversations(conversationSid)
+        .update({ attributes: JSON.stringify(conversationAttributes) });
+    }
+
     callback(null, response);
   } catch (error) {
     console.log(error);
