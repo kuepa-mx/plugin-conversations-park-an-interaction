@@ -26,23 +26,26 @@ exports.handler = async function (context, event, callback) {
         (participant) => participant?.messagingBinding
       )?.messagingBinding;
 
-      if (binding) {
+      // Obtain the conversation resource.
+      const conversation = await client.conversations
+        .conversations(conversationSid)
+        .fetch();
+
+      // Parse its attributes.
+      const attributes = JSON.parse(conversation.attributes);
+
+      // Check if the alert message was already sent.
+      if (binding && !attributes?.["alertMessage"]) {
         const { proxy_address, address } = binding;
 
         // Create the message.
-        const message = await client.messages.create({
+        await client.messages.create({
           to: address,
           from: proxy_address,
           body: "Gracias por comunicarte a la Uk, la conversación ha quedado cerrada. Recuerda que al referir a un amigo a estudiar una Licenciatura con nosotros puedes llevarte un 70% de descuento en tu próxima colegiatura.",
         });
 
         // Attach the message to the conversation's attributes to not re-send it.
-        const conversation = await client.conversations
-          .conversations(conversationSid)
-          .fetch();
-
-        const attributes = JSON.parse(conversation.attributes);
-
         attributes["alertMessage"] = true;
 
         // Set the new attributes on the conversation.
