@@ -26,9 +26,10 @@ export default class ConversationsParkAnInteractionPlugin extends FlexPlugin {
     });
 
     // Conditional assignment for assigned Chat tasks.
-    const isAssignedChatTask = (props) =>
-      props.channelDefinition.capabilities.has("Chat") &&
-      props.task.taskStatus === "assigned";
+    const isAssignedChatTask = (props) => { // Imprime el contenido de props
+      return props.channelDefinition.capabilities.has("Chat") &&
+        props.task.taskStatus === "assigned" && props.task.queueName !== 'whatsapp_kuepa_commercial'
+    };
 
     flex.TaskCanvasHeader.Content.remove("actions", {
       if: isAssignedChatTask,
